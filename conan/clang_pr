@@ -1,0 +1,15 @@
+[settings]
+os=Linux
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.version=15
+compiler.libcxx=libstdc++11
+#libstdc++11
+
+
+[options]
+
+[env]
+CC=/lib/llvm-15/bin/clang
+CXX=/lib/llvm-15/bin/clang++
