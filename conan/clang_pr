@@ -9,7 +9,3 @@ compiler.libcxx=libstdc++11
 
 
 [options]
-
-[env]
-CC=/lib/llvm-15/bin/clang
-CXX=/lib/llvm-15/bin/clang++

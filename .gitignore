@@ -5,3 +5,9 @@ bin/*
 conan_cmake/
 conan_cmake/*
 compile_commands.json
+conan.lock
+CMakeUserPresets.json
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
+test_package/
