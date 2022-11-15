@@ -1,6 +1,8 @@
 # -================GOD ENDS HERE===============================
 # --TODO ENABLE EAST CROSS SCRIPTING
+# - TODO TRY EMSCRIPTIN
 
+#- TODO create CONAN PACKAGE NAME and version for conan_create and conan_test
 import os
 import subprocess
 import sys
@@ -18,7 +20,7 @@ conan = True
 TargetApp = True
 EnableTest = True
 godot = False
-RecordTime = True
+RecordTime = False
 ShowTime = False
 # ---------DEFS DONT ALTER-------------
 cwd = os.getcwd()
@@ -30,12 +32,10 @@ Fatal = True
 # -------------------CONAN DATA---------------------------
 
 if conan:
-    conan_dir = "./"
-    conan_data = "conan"
-    conan_data_path = join(cfd, conan_data)
-    conan_dir_path = join(cfd, conan_dir)
-    conan_build_dir = "conan_cmake"
-    conan_build_dir_path = join(cfd, conan_build_dir)
+    conan_data_path = join(cfd, "conan")
+    conan_dir_path = join(cfd, "")
+    conan_build_dir_path = join(cfd, "conan_cmake")
+
 
     # 'clang' | ''/'default'
     conan_profile_host = "android"
@@ -52,26 +52,34 @@ if conan:
         conan_profile_host_path = "default"
     if conan_profile_build == "default" or conan_profile_build == "":
         conan_profile_build_path = "default"
-
+    
+    #! need to pulll this from conanfile
+    #! not currently used, modify the function directly
+    conan_package_name=f"sockets_p"
+    conan_version=f"0.1"
+    conan_user=f"xzijoq"
+    conan_channel=f"testing"
+    
 # -------------------CONAN DATA ENDS----------------------
 
 # ---------------- CMAKE DATA START ---------------
 # -- Required vaiables-- set to "" if not in use
 if Fatal == True:
-    build_dir = "build"
-    build_dir_path = join(cfd, build_dir)
+
+    build_dir_path = join(cfd, "build")
 
     # not required!! not currently used
     cmake_compiler = "clang++"
     cmake_c_compiler = "clang"
     #cmake_compiler = "Visual Studio"
 
-    cmake_build_type = "Release"
+    #! debug type not working fix
     cmake_build_type = "Debug"
+    cmake_build_type = "Release"
 
     cmake_generator = "vs...fix"
-    cmake_generator = "Ninja"
     cmake_generator = "\"Ninja Multi-Config\""  # notWorking
+    cmake_generator = "Ninja"
 
     # leave empty if using conan
     cmake_toolchain_path = ""
@@ -82,7 +90,7 @@ if Fatal == True:
 
 if TargetApp:
     # target_name="c_app"
-
+    #! need to pull this and full path from cmake
     target = "c_app"
     target_src_dir = "c_app"
 
@@ -93,7 +101,7 @@ if TargetApp:
 
 if EnableTest == True:
     TestSourceDir = "tests/"
-    Tests = ['ggtest']
+    Tests = ['g_tst']
 
 # ----EndTest------
 
@@ -137,6 +145,10 @@ def MainFunc():
         run_target()
     if 't' in args.goRun:
         run_test()
+    if 'cr' in args.goRun:
+        conan_create()
+    if 'ct' in args.goRun:
+        conan_test()
     if 'gc' in args.goRun:
         godot_copy()
     if 'gx' in args.goRun:
@@ -166,12 +178,15 @@ def conan_run():
     if conan_profile_build_path != "default" and not isfile(conan_profile_build_path):
         p_err(f"NOT FOUND {conan_profile_build_path}", Fatal)
 
-    if isdir(conan_build_dir_path):
-        p_msg(f"Deleting ConanBuildDir:\n   {conan_build_dir_path}")
-        shutil.rmtree(conan_build_dir_path)
+    p_msg(
+        f"Deleting ConanBuildDir: {conan_build_dir_path}"+c_del(conan_build_dir_path))
+    c_del(join(cfd, "conan.lock"))
+    c_del(join(cfd, "conanbuildinfo.txt"))
+    c_del(join(cfd, "conaninfo.txt"))
+    c_del(join(cfd, "graph_info.json"))
+    c_del(join(cfd, "CMakeUserPresets.json"))
 
     #            -of={conan_build_dir_path} \
-
     # $ REAL DEAL
     conan_r = f"conan install {conan_dir_path}\
              --build=missing \
@@ -181,16 +196,11 @@ def conan_run():
     if (not {args.coa} == ""):
         conan_r += f" {args.coa}"
 
+    c_run(conan_r, True)
 
-    c_run(conan_r,True)
-    #sTime = time.time()
-    #result = subprocess.run(f"{conan_r}", shell=True)
-    #p_nfy(f"{result}")
-    #if not result.returncode == 0:
-    #    p_err("Failed", Fatal)
-    #pr_time("conan install:       "+str(time.time()-sTime))
     pr_time(str(time.time()-fTime))
-    #conan test test_package sockets_p/0.1
+    # conan test test_package sockets_p/0.1
+
 
 def cmake_run():
     fTime = time.time()
@@ -198,11 +208,10 @@ def cmake_run():
     global cmake_toolchain_path
     if not isfile(join(cfd, "CMakeLists.txt")):
         p_err("CMakeLists.txt not found", Fatal)
-    if (build_dir == ""):
+    if (build_dir_path == ""):
         p_err("CmakeBuildDir cant be null specified", Fatal)
-    if isdir(build_dir_path):
-        p_msg(f"Deleting:  {build_dir_path}")
-        shutil.rmtree(build_dir_path)
+
+    p_msg(f"Deleting:  {build_dir_path}"+c_del(build_dir_path))
 
     # @ todo: currently specifying source directory is not supported
     cmake_command = f"cmake -S./ -B {build_dir_path}"
@@ -212,20 +221,18 @@ def cmake_run():
 
     if (not cmake_compiler == ""):
         cmake_command += f" -D CMAKE_CXX_COMPILER={cmake_compiler}"
-        pass
 
     if (not cmake_generator == ""):
-        cmake_command += f" -G {cmake_generator}"
         pass
+        cmake_command += f" -G {cmake_generator}"
 
     if conan and cmake_toolchain_path == "":
-        cmake_toolchain_file = "conan_toolchain.cmake"
-        cmake_toolchain_dir = conan_build_dir_path
-        cmake_toolchain_path = join(cmake_toolchain_dir, cmake_toolchain_file)
-        # cmake_toolchain_path=f"D:/code/ludo2p/conan_cmake/conan_toolchain.cmake"
+        cmake_toolchain_path = join(
+            conan_build_dir_path, "generators", "conan_toolchain.cmake")
+
     if (not cmake_toolchain_path == ""):
-        cmake_command += f" {cfd} --preset release "
         #cmake_command += f" -D CMAKE_TOOLCHAIN_FILE={cmake_toolchain_path}"
+        cmake_command += f" {cfd} --preset release "
 
     if (TargetApp == True):
         cmake_command += f" -D TargetApp=True "
@@ -240,14 +247,7 @@ def cmake_run():
     cmake_command += f" -DCMAKE_POLICY_DEFAULT_CMP0091=NEW "
     cmake_command += f" --warn-uninitialized "
 
-    #sTime = time.time()
-    #result = subprocess.run(f"{cmake_command}", shell=True)
-    #p_nfy(f"{result}")
-    #pr_time("cmake -S..:       "+str(time.time()-sTime))
-#
-    #if not result.returncode == 0:
-    #    p_err(f"Failed : {result.returncode}", Fatal)
-    c_run(cmake_command,True)
+    c_run(cmake_command, True)
 
     pr_time(str(time.time()-fTime))
     pass
@@ -265,30 +265,24 @@ def cmake_build():
     if not (args.cba == ""):
         cmake_build_command += f"{args.cba}"
 
-    sTime = time.time()
-    result = subprocess.run(
-        f"{cmake_build_command}", shell=True)
-    p_nfy(f"{result}")
-    pr_time("cmake --build:       "+str(time.time()-sTime))
+    c_run(cmake_build_command)
 
+    p_wrn("NOT! Copyting compile_commands.json")
     # & CopyCopileCommands
-    if not result.returncode == 0:
-        p_err(f"Failed : {result.returncode}", Fatal)
-
-    if isfile(join(build_dir_path, "compile_commands.json")):
-        if isfile(join(cfd, "compile_commands.json")):
-            os.remove(join(cfd, "compile_commands.json"))
-        else:
-            p_wrn(
-                f"can'nt find compile_commands.json in cfd trying new copy: {cfd}")
-        p_msg("Copyting compile_commands.json")
-        shutil.copy(
-            join(build_dir_path, "compile_commands.json"),
-            join(cfd, "compile_commands.json"),
-        )
-    else:
-        p_wrn(
-            f"ERR: can'nt find compile_commands.json in build dir: {build_dir_path}")
+    #if isfile(join(build_dir_path, "compile_commands.json")):
+    #    if isfile(join(cfd, "compile_commands.json")):
+    #        os.remove(join(cfd, "compile_commands.json"))
+    #    else:
+    #        p_wrn(
+    #            f"can'nt find compile_commands.json in cfd trying new copy: {cfd}")
+    #    p_wrn(" Copyting compile_commands.json")
+    #    shutil.copy(
+    #        join(build_dir_path, "compile_commands.json"),
+    #        join(cfd, "compile_commands.json"),
+    #    )
+    #else:
+    #    p_wrn(
+    #        f"ERR: can'nt find compile_commands.json in build dir: {build_dir_path}")
     pr_time(str(time.time()-fTime))
 
 
@@ -315,12 +309,9 @@ def run_target():
     if not isfile(target_path):
         p_err(f"NotFound {target_path}")
         return
-    sTime = time.time()
-    result = subprocess.run(
-        [f"{target_path} {args.exa}"], shell=True
-    )
-    p_nfy(f"{result} ")
-    pr_time("consoleRunTime:       "+str(time.time()-sTime))
+
+    c_run(f"{target_path} {args.exa}")
+
     pr_time(str(time.time()-fTime))
 
 
@@ -333,25 +324,35 @@ def run_test():
     # $CAN USE CTEST FOR ITS FEATURES
     #test=f"ctest  --output-on-failure --verbose --gtest_color=yes"
     test_dir = join(build_dir_path, TestSourceDir)
+
+    if (cmake_generator == "\"Ninja Multi-Config\""):
+        test_dir = join(build_dir_path, TestSourceDir,
+                           cmake_build_type)
+
     for i in Tests:
         test_path = join(test_dir, i)
         test_command = test_path
         if args.tea != "":
             test_command += args.tea
-        sTime = time.time()
-        result = subprocess.run(f"{test_command}", shell=True)
-        p_nfy(f"{result}")
-        pr_time("Test"+str(i)+": "+str(time.time()-sTime))
+        c_run(test_command)
     pr_time(str(time.time()-fTime))
 
 
 def clean():
     fTime = time.time()
     p_fnc("Executing")
-    shutil.rmtree(join(cfd, ".vscode"), ignore_errors=True)
-    shutil.rmtree(join(cfd, ".cache"), ignore_errors=True)
-    shutil.rmtree(build_dir_path, ignore_errors=True)
-    shutil.rmtree(conan_build_dir_path, ignore_errors=True)
+
+    p_wrn(c_del(join(cfd, "conan.lock")))
+    p_wrn(c_del(join(cfd, "conanbuildinfo.txt")))
+    p_wrn(c_del(join(cfd, "conaninfo.txt")))
+    p_wrn(c_del(join(cfd, "graph_info.json")))
+    p_wrn(c_del(join(cfd, "CMakeUserPresets.json")))
+
+    p_wrn(c_del(join(cfd, ".vscode")))
+    p_wrn(c_del(join(cfd, ".cache")))
+    p_wrn(c_del(build_dir_path))
+    p_wrn(c_del(conan_build_dir_path))
+
     if godot:
         for i in godot_lib:
             target_lib = join(godot_dir, i)
@@ -359,6 +360,26 @@ def clean():
                 os.remove(target_lib)
     pr_time(str(time.time()-fTime))
 
+
+def conan_create():
+    fTime = time.time()
+    p_fnc("Executing")
+    #conan create . --user=xzijoq --channel=testing
+
+    co_crt=f"conan create {conan_dir_path} --user=xzijoq --channel=testing"
+    c_run(co_crt)
+    pr_time(str(time.time()-fTime))
+    pass
+def conan_test():
+    fTime = time.time()
+    p_fnc("Executing")
+
+    #conan test test_package sockets_p/0.1@xzijoq/testing
+    tf_path=join(cfd,"test_package")
+    co_tst=f"conan test {tf_path} sockets_p/0.1@xzijoq/testing"
+    c_run(co_tst)
+    pr_time(str(time.time()-fTime))
+    pass
 
 def godot_copy():
     fTime = time.time()
@@ -395,6 +416,9 @@ def godot_copy():
     pr_time(str(time.time()-fTime))
 
 
+
+
+
 def godot_run():
     fTime = time.time()
     p_fnc("executing")
@@ -429,27 +453,40 @@ def godot_run():
 
 # ---------------HELPER---------------------------
 
+
 def c_run(command, isFatal=False):
     fTime = time.time()
-    #p_err(command)
+    # p_err(command)
     result = subprocess.run(f"{command}", shell=True)
     p_nfy(f"----------\n{result}\n")
     p_nfy(f"done")
-    short_command=(command[:15] + '..                     ') if len(command) > 15 else data
+    short_command = (
+        command[:15] + '..                     ') if len(command) > 15 else data
     pr_time(f"{short_command} "+str(time.time()-fTime))
 
     if not result.returncode == 0:
         p_err(f"Failed : {result.returncode}", isFatal)
     pass
 
-def c_del():
+
+def c_del(what, isFatal=False):
+    if os.path.isfile(what):
+        os.remove(what)
+        return ""
+    elif os.path.isdir(what):
+        shutil.rmtree(what)
+        return ""
+    else:
+        if (isFatal):
+            p_err(f"Can't Delete {what} not found", Fatal)
+        return f"Can't Delete {what} not found"
     pass
 
 
 def goRun_check():
     fTime = time.time()
     p_fnc("executing")
-    validLis = ['c', 'r', 'b', 'x', 't', 'gc', 'gx', 'clean']
+    validLis = ['c', 'r', 'b', 'x', 't','ct','cr', 'gc', 'gx', 'clean']
     isValid = False
     # isValid = goRun_has('clean') or goRun_has('c') or goRun_has(
     #    'r') or goRun_has('b') or goRun_has('x') or goRun_has('gc') or goRun_has('gx')
@@ -466,6 +503,8 @@ def goRun_check():
             b:     cmake_build()\n\
             x:     run_target()\n\
             t:     run_tests()\n\
+            ct:    conan_test()\n\
+            cr:    conan_create()\n\
             gc:    godot_copy()\n\
             gx:    godot_run()\n\
             clean: clean() and return\n\
@@ -491,6 +530,7 @@ def goRun_check():
     pr_time(str(time.time()-fTime))
 
 # ------------------HELPER END------------
+
 
 # -------------------PARSER STARTS HERE----------------------
 parser = argparse.ArgumentParser()
@@ -522,6 +562,8 @@ def p_msg(what):
 
 
 def p_wrn(what):
+    if (what == ""):
+        return
     callerframerecord = inspect.stack()[1]
     frame = callerframerecord[0]
     info = inspect.getframeinfo(frame)

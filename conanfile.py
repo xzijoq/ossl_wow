@@ -13,6 +13,7 @@ class sockets_p(ConanFile):
 
     def requirements(self):
         self.requires("asio/[>=1.24.0]")#,headers=True, libs=True,transitive_headers=True,transitive_libs=True,run=True,visible=True,package_id_mode="full_mode")
+        self.requires("gtest/cci.20210126" )#,transitive_headers=True)
         pass
 
     def source(self):
