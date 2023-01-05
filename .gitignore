@@ -10,4 +10,4 @@ CMakeUserPresets.json
 conanbuildinfo.txt
 conaninfo.txt
 graph_info.json
-test_package/
+test_package/build

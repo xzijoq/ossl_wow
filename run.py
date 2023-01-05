@@ -1,41 +1,46 @@
 # -================GOD ENDS HERE===============================
+
+#region TODO
 # --TODO ENABLE EAST CROSS SCRIPTING
 # - TODO TRY EMSCRIPTIN
 
-#- TODO create CONAN PACKAGE NAME and version for conan_create and conan_test
+# - TODO create CONAN PACKAGE NAME and version for conan_create and conan_test
+#endregion
+# region imports
 import os
 import subprocess
 import sys
 import argparse
 import shutil
 import time
-
+from io import StringIO
 from os.path import join
 from os.path import isdir
 from os.path import isfile
 import inspect
 from inspect import currentframe, getframeinfo
+# endregion
 
 conan = True
 TargetApp = True
 EnableTest = True
+
 godot = False
 RecordTime = False
 ShowTime = False
+#region CONSTANTS
 # ---------DEFS DONT ALTER-------------
 cwd = os.getcwd()
 cfd = os.path.dirname(os.path.realpath(__file__))
 Fatal = True
 # --------------END DEFS----------------------
+#endregion
 
-
-# -------------------CONAN DATA---------------------------
-
+# region -------------------CONAN DATA---------------------------
 if conan:
     conan_data_path = join(cfd, "conan")
     conan_dir_path = join(cfd, "")
     conan_build_dir_path = join(cfd, "conan_cmake")
-
 
     # 'clang' | ''/'default'
     conan_profile_host = "android"
@@ -52,85 +57,79 @@ if conan:
         conan_profile_host_path = "default"
     if conan_profile_build == "default" or conan_profile_build == "":
         conan_profile_build_path = "default"
-    
+
     #! need to pulll this from conanfile
     #! not currently used, modify the function directly
-    conan_package_name=f"sockets_p"
-    conan_version=f"0.1"
-    conan_user=f"xzijoq"
-    conan_channel=f"testing"
-    
-# -------------------CONAN DATA ENDS----------------------
+    conan_package_name = f"sockets_p"
+    conan_version = f"0.1"
+    conan_user = f"xzijoq"
+    conan_channel = f"testing"
 
-# ---------------- CMAKE DATA START ---------------
+# -------------------CONAN DATA ENDS----------------------
+# endregion
+
+#region ---------------CMAKE DATA--------------------
 # -- Required vaiables-- set to "" if not in use
 if Fatal == True:
 
     build_dir_path = join(cfd, "build")
-
-    # not required!! not currently used
-    cmake_compiler = "clang++"
+    
+    # cmake_c_compiler = ""
     cmake_c_compiler = "clang"
-    #cmake_compiler = "Visual Studio"
 
-    #! debug type not working fix
-    cmake_build_type = "Debug"
+    # cmake_cxx_compiler = "gcc"
+    # cmake_cxx_compiler = "Visual Studio"
+    # cmake_cxx_compiler = ""
+    cmake_cxx_compiler = "clang++"
+    
+    #! debug type not working (no effect) fix
+
+    # cmake_build_type = "Debug" ##wont work not
     cmake_build_type = "Release"
 
-    cmake_generator = "vs...fix"
-    cmake_generator = "\"Ninja Multi-Config\""  # notWorking
+    # cmake_generator = "\"Ninja Multi-Config\""  # notWorking
+    # cmake_generator = "vs...fix"
+    cmake_generator = ""
     cmake_generator = "Ninja"
-
     # leave empty if using conan
     cmake_toolchain_path = ""
 
-# ----------------CMAKE DATA ENDS HERE-------------------
 
-# ---------------------------TARGET
+# endregion
+
+# region ---------------------------TARGET DATA----
 
 if TargetApp:
     # target_name="c_app"
     #! need to pull this and full path from cmake
-    target = "c_app"
+
     target_src_dir = "c_app"
+    target = "c_app"
 
+# endregion
 
-# -- ------------------------END TARGET
-
-# --------Test---
+# region --------Test DATA---
 
 if EnableTest == True:
     TestSourceDir = "tests/"
     Tests = ['g_tst']
-
-# ----EndTest------
-
-# -------------------GODOT DATA STARTS----------------------
-
-if godot:
-    godot_scene = "Display.tscn"
-    godot_executable = f"/home/babayaga/godot/godotb"
-    godot_project_path = join(cfd, "godot/tanks")
-    godot_relative_src_path = f"godot/src_godot"
-    godot_lib = ["libgui.so"]
-    godot_dir = join(godot_project_path, "bin")
-    godot_scene_dir = join(godot_project_path, "scenes")
-# -------------------Godot DATA ENDS----------------------
-
-
 if RecordTime:
     rTime = []
     pass
 
 
-# ---------------MAIN STARTS HERE----------------------
+# endregion
+
+
+
+# region ---------------MAIN STARTS HERE----------------------
 
 
 def MainFunc():
 
     global rTime
     fTime = time.time()
-    p_fnc("executing")
+    fun.p("executing")
     goRun_check()
     if 'clean' in args.goRun:
         clean()
@@ -160,25 +159,28 @@ def MainFunc():
             p_time(i)
 
     pr_time(str(time.time()-fTime))
-    p_mwg("Script END")
+    msg.p("Script END")
     return 0
+# endregion
 
+# region conan_func
 
 def conan_run():
     fTime = time.time()
-    p_fnc("executing")
+    fun.p("executing")
+
     if not conan:
-        p_wrn("Conan is DEFINED FALSE")
+        wrn.p("Conan is DEFINED FALSE")
         return False
     if not isdir(conan_dir_path):
-        p_err(f"Conan Directory Not Found: {conan_dir_path}", Fatal)
+        err.p(f"Conan Directory Not Found: {conan_dir_path}", Fatal)
     if conan_profile_host_path != "default" and not isfile(conan_profile_host_path):
-        p_err(f"NOT FOUND {conan_profile_host_path}", Fatal)
+        err.p(f"NOT FOUND {conan_profile_host_path}", Fatal)
 
     if conan_profile_build_path != "default" and not isfile(conan_profile_build_path):
-        p_err(f"NOT FOUND {conan_profile_build_path}", Fatal)
+        err.p(f"NOT FOUND {conan_profile_build_path}", Fatal)
 
-    p_msg(
+    msg.p(
         f"Deleting ConanBuildDir: {conan_build_dir_path}"+c_del(conan_build_dir_path))
     c_del(join(cfd, "conan.lock"))
     c_del(join(cfd, "conanbuildinfo.txt"))
@@ -191,7 +193,7 @@ def conan_run():
     conan_r = f"conan install {conan_dir_path}\
              --build=missing \
              --profile:build={conan_profile_build_path} \
-             --profile:host={conan_profile_host_path}"
+             --profile:host={conan_profile_host_path} "
     # $ ENd
     if (not {args.coa} == ""):
         conan_r += f" {args.coa}"
@@ -201,17 +203,42 @@ def conan_run():
     pr_time(str(time.time()-fTime))
     # conan test test_package sockets_p/0.1
 
+def conan_create():
+    fTime = time.time()
+    fun.p("Executing")
+    # conan create . --user=xzijoq --channel=testing
+
+    co_crt = f"conan create {conan_dir_path} --user=xzijoq --channel=testing"
+    c_run(co_crt)
+    pr_time(str(time.time()-fTime))
+    pass
+
+def conan_test():
+    fTime = time.time()
+    fun.p("Executing")
+
+    # conan test test_package sockets_p/0.1@xzijoq/testing
+    tf_path = join(cfd, "test_package")
+    co_tst = f"conan test {tf_path} sockets_p/0.1@xzijoq/testing"
+    c_run(co_tst)
+    pr_time(str(time.time()-fTime))
+    pass
+
+# endregion
+
+# region cmake_func
 
 def cmake_run():
     fTime = time.time()
-    p_fnc("Executing")
+
+    fun.p("Executing")
     global cmake_toolchain_path
     if not isfile(join(cfd, "CMakeLists.txt")):
-        p_err("CMakeLists.txt not found", Fatal)
+        err.p("CMakeLists.txt not found", Fatal)
     if (build_dir_path == ""):
-        p_err("CmakeBuildDir cant be null specified", Fatal)
+        err.p("CmakeBuildDir cant be null specified", Fatal)
 
-    p_msg(f"Deleting:  {build_dir_path}"+c_del(build_dir_path))
+    msg.p(f"Deleting:  {build_dir_path}"+c_del(build_dir_path))
 
     # @ todo: currently specifying source directory is not supported
     cmake_command = f"cmake -S./ -B {build_dir_path}"
@@ -219,11 +246,13 @@ def cmake_run():
     if (not cmake_build_type == ""):
         cmake_command += f" -D CMAKE_BUILD_TYPE={cmake_build_type}"
 
-    if (not cmake_compiler == ""):
-        cmake_command += f" -D CMAKE_CXX_COMPILER={cmake_compiler}"
+    if (not cmake_c_compiler == ""):
+        cmake_command += f" -D CMAKE_C_COMPILER={cmake_c_compiler}"
+
+    if (not cmake_cxx_compiler == ""):
+        cmake_command += f" -D CMAKE_CXX_COMPILER={cmake_cxx_compiler}"
 
     if (not cmake_generator == ""):
-        pass
         cmake_command += f" -G {cmake_generator}"
 
     if conan and cmake_toolchain_path == "":
@@ -231,7 +260,7 @@ def cmake_run():
             conan_build_dir_path, "generators", "conan_toolchain.cmake")
 
     if (not cmake_toolchain_path == ""):
-        #cmake_command += f" -D CMAKE_TOOLCHAIN_FILE={cmake_toolchain_path}"
+        # cmake_command += f" -D CMAKE_TOOLCHAIN_FILE={cmake_toolchain_path}"
         cmake_command += f" {cfd} --preset release "
 
     if (TargetApp == True):
@@ -247,50 +276,55 @@ def cmake_run():
     cmake_command += f" -DCMAKE_POLICY_DEFAULT_CMP0091=NEW "
     cmake_command += f" --warn-uninitialized "
 
-    c_run(cmake_command, True)
+    c_run(cmake_command, Fatal)
 
     pr_time(str(time.time()-fTime))
     pass
 
 
+
+  
 def cmake_build():
     fTime = time.time()
-    p_fnc("executing")
+    fun.p("executing")
     if not os.path.isdir(build_dir_path):
-        p_nfy("Try calling the script with f/r or full/run")
-        p_err("Build Directory not found", Fatal)
+        nfy.p("Try calling the script with f/r or full/run")
+        err.p("Build Directory not found", Fatal)
     config_r = f" --config {cmake_build_type}"
     cmake_build_command = f"cmake --build {build_dir_path} {config_r} -j8 "
 
     if not (args.cba == ""):
         cmake_build_command += f"{args.cba}"
 
-    c_run(cmake_build_command)
+    c_run(cmake_build_command, Fatal)
 
-    p_wrn("NOT! Copyting compile_commands.json")
+    nfy.p("NOT! Copyting compile_commands.json")
     # & CopyCopileCommands
-    #if isfile(join(build_dir_path, "compile_commands.json")):
+    # if isfile(join(build_dir_path, "compile_commands.json")):
     #    if isfile(join(cfd, "compile_commands.json")):
     #        os.remove(join(cfd, "compile_commands.json"))
     #    else:
-    #        p_wrn(
+    #        wrn.p(
     #            f"can'nt find compile_commands.json in cfd trying new copy: {cfd}")
-    #    p_wrn(" Copyting compile_commands.json")
+    #    wrn.p(" Copyting compile_commands.json")
     #    shutil.copy(
     #        join(build_dir_path, "compile_commands.json"),
     #        join(cfd, "compile_commands.json"),
     #    )
-    #else:
-    #    p_wrn(
+    # else:
+    #    wrn.p(
     #        f"ERR: can'nt find compile_commands.json in build dir: {build_dir_path}")
     pr_time(str(time.time()-fTime))
+ 
+# endregion
 
 
+# region def run_target():
 def run_target():
     fTime = time.time()
-    p_fnc("Executing")
+    fun.p("Executing")
     if TargetApp == False:
-        p_wrn("TargetApp is DEFINED FALSE")
+        wrn.p("TargetApp is DEFINED FALSE")
         return
     global target
 
@@ -298,7 +332,7 @@ def run_target():
         target = args.target
 
     if target == "":
-        p_wrn("NO TARGET TO RUN")
+        wrn.p("NO TARGET TO RUN")
         return False
 
     target_path = join(build_dir_path, target_src_dir, target)
@@ -307,27 +341,29 @@ def run_target():
                            cmake_build_type, target)
 
     if not isfile(target_path):
-        p_err(f"NotFound {target_path}")
+        err.p(f"NotFound {target_path}")
         return
 
     c_run(f"{target_path} {args.exa}")
 
     pr_time(str(time.time()-fTime))
+# endregion
 
 
+# region def run_test():
 def run_test():
     fTime = time.time()
-    p_fnc("executing")
+    fun.p("executing")
     if EnableTest == False:
-        p_wrn("EnableTest is FALSE")
+        wrn.p("EnableTest is FALSE")
         return
     # $CAN USE CTEST FOR ITS FEATURES
-    #test=f"ctest  --output-on-failure --verbose --gtest_color=yes"
+    # test=f"ctest  --output-on-failure --verbose --gtest_color=yes"
     test_dir = join(build_dir_path, TestSourceDir)
 
     if (cmake_generator == "\"Ninja Multi-Config\""):
         test_dir = join(build_dir_path, TestSourceDir,
-                           cmake_build_type)
+                        cmake_build_type)
 
     for i in Tests:
         test_path = join(test_dir, i)
@@ -336,22 +372,26 @@ def run_test():
             test_command += args.tea
         c_run(test_command)
     pr_time(str(time.time()-fTime))
+# endregion
 
 
+# region def clean():
 def clean():
     fTime = time.time()
-    p_fnc("Executing")
+    fun.p("Executing")
 
-    p_wrn(c_del(join(cfd, "conan.lock")))
-    p_wrn(c_del(join(cfd, "conanbuildinfo.txt")))
-    p_wrn(c_del(join(cfd, "conaninfo.txt")))
-    p_wrn(c_del(join(cfd, "graph_info.json")))
-    p_wrn(c_del(join(cfd, "CMakeUserPresets.json")))
+    wrn.p(c_del(join(cfd, "conan.lock")))
+    wrn.p(c_del(join(cfd, "conanbuildinfo.txt")))
+    wrn.p(c_del(join(cfd, "conaninfo.txt")))
+    wrn.p(c_del(join(cfd, "graph_info.json")))
+    wrn.p(c_del(join(cfd, "CMakeUserPresets.json")))
 
-    p_wrn(c_del(join(cfd, ".vscode")))
-    p_wrn(c_del(join(cfd, ".cache")))
-    p_wrn(c_del(build_dir_path))
-    p_wrn(c_del(conan_build_dir_path))
+    wrn.p(c_del(join(cfd, ".vscode")))
+    wrn.p(c_del(join(cfd, ".cache")))
+    wrn.p(c_del(build_dir_path))
+    wrn.p(c_del(conan_build_dir_path))
+
+    wrn.p(c_del(join(cfd, "test_package","build")))
 
     if godot:
         for i in godot_lib:
@@ -359,116 +399,31 @@ def clean():
             if isfile(target_lib):
                 os.remove(target_lib)
     pr_time(str(time.time()-fTime))
+# endregion
 
 
-def conan_create():
+# region c_run
+
+
+def c_run(command, isFatal=False, is_silent=False):
     fTime = time.time()
-    p_fnc("Executing")
-    #conan create . --user=xzijoq --channel=testing
-
-    co_crt=f"conan create {conan_dir_path} --user=xzijoq --channel=testing"
-    c_run(co_crt)
-    pr_time(str(time.time()-fTime))
-    pass
-def conan_test():
-    fTime = time.time()
-    p_fnc("Executing")
-
-    #conan test test_package sockets_p/0.1@xzijoq/testing
-    tf_path=join(cfd,"test_package")
-    co_tst=f"conan test {tf_path} sockets_p/0.1@xzijoq/testing"
-    c_run(co_tst)
-    pr_time(str(time.time()-fTime))
-    pass
-
-def godot_copy():
-    fTime = time.time()
-    p_fnc("executing")
-    if godot == False:
-       # p_wrn("Godot is set to False")
-        return False
-
-    if not isdir(godot_project_path):
-        p_err("Godot ProjectDir NOT FOUND:\n{godot_project_path} ", Fatal)
-
-    if not isfile(join(godot_project_path, "project.godot")):
-        p_err(
-            "MostLikely Invalid godot project Directoey:\n{godot_project_path}")
-    if not isdir(godot_dir):
-        p_err("Godot Library folder  not found:\n{godot_dir}", Fatal)
-
-    if not isdir(godot_dir):
-        p_err(f"{godot_dir} Not FOund", Fatal)
-
-    for i in godot_lib:
-        target_lib = join(godot_dir, i)
-        src_lib = join(build_dir_path, godot_relative_src_path, i)
-
-        if not isfile(src_lib):
-            p_err(f"Godot Built Library Not FOund:\n{src_lib} ", Fatal)
-        if isfile(target_lib):
-            p_msg(f"removing {target_lib}:")
-            os.remove(target_lib)
-        else:
-            p_wrn(f"{target_lib} not fouind")
-        p_msg(f"copying {src_lib} --> {target_lib}")
-        ts = shutil.copy(src_lib, target_lib)
-    pr_time(str(time.time()-fTime))
-
-
-
-
-
-def godot_run():
-    fTime = time.time()
-    p_fnc("executing")
-    if godot == False:
-        #p_wrn("Godot is set to False")
-        return False
-
-    global godot_scene
-    if not args.scene == "":
-        godot_scene = args.scene
-    if not str(godot_scene).endswith(".tscn"):
-        godot_scene = godot_scene + ".tscn"
-
-    os.chdir(godot_project_path)
-    scene_path = join(godot_scene_dir, godot_scene)
-    if not isfile(godot_executable):
-        p_err("Godot Executable not found at {godot_executable}")
-        return False
-    if not isdir(godot_scene_dir):
-        p_err(f"Does Not Exist {godot_scene_dir}  ")
-        return False
-    if not isfile(scene_path):
-        p_err(f"Does Not Exist:--- {godot_scene} --AT \n {scene_path} ")
-        return False
-
-    runs = f"{godot_executable} -d {scene_path}"
-    result = subprocess.run(f"{runs}", shell=True)
-    p_nfy(f"{result}")
-
-    pr_time(str(time.time()-fTime))
-
-
-# ---------------HELPER---------------------------
-
-
-def c_run(command, isFatal=False):
-    fTime = time.time()
-    # p_err(command)
+    # err.p(command)
     result = subprocess.run(f"{command}", shell=True)
-    p_nfy(f"----------\n{result}\n")
-    p_nfy(f"done")
+    nfy.p(f"----------\n{result}\n")
+    nfy.p(f"done")
     short_command = (
-        command[:15] + '..                     ') if len(command) > 15 else data
+        command[:15] + '..                     ') if len(command) > 15 else command
     pr_time(f"{short_command} "+str(time.time()-fTime))
 
     if not result.returncode == 0:
-        p_err(f"Failed : {result.returncode}", isFatal)
+        callerframerecord = inspect.stack()[1]
+        frame = callerframerecord[0]
+        err.p(f"Failed : {result.returncode}", Fatal, frame)
     pass
+# endregion
 
 
+# region c_Del
 def c_del(what, isFatal=False):
     if os.path.isfile(what):
         os.remove(what)
@@ -478,60 +433,17 @@ def c_del(what, isFatal=False):
         return ""
     else:
         if (isFatal):
-            p_err(f"Can't Delete {what} not found", Fatal)
+            callerframerecord = inspect.stack()[1]
+            frame = callerframerecord[0]
+            err.p(f"Can't Delete {what} not found", Fatal, frame)
+            # err.p(f"Can't Delete {what} not found", Fatal)
         return f"Can't Delete {what} not found"
     pass
+# endregion
 
 
-def goRun_check():
-    fTime = time.time()
-    p_fnc("executing")
-    validLis = ['c', 'r', 'b', 'x', 't','ct','cr', 'gc', 'gx', 'clean']
-    isValid = False
-    # isValid = goRun_has('clean') or goRun_has('c') or goRun_has(
-    #    'r') or goRun_has('b') or goRun_has('x') or goRun_has('gc') or goRun_has('gx')
-    for i in args.goRun:
-        if i in validLis:
-            isValid = True
-        else:
-            p_wrn(f"Unused argument: {i}")
-        pass
-    if not isValid:
-        p_msg(f"Valid Arguments to Run:\n\
-            c:     conan_run()\n\
-            r:     cmake_run()\n\
-            b:     cmake_build()\n\
-            x:     run_target()\n\
-            t:     run_tests()\n\
-            ct:    conan_test()\n\
-            cr:    conan_create()\n\
-            gc:    godot_copy()\n\
-            gx:    godot_run()\n\
-            clean: clean() and return\n\
-            --help: for help\n\
-        ")
-        p_err("Please Enter a Valid Command", Fatal)
-
-    if (('c' in args.goRun) and conan == False):
-        p_wrn(f"Coan is set to false, yet coanan_run() was requested via arg 'c'\n")
-
-    if (('gc' in args.goRun) and godot == False):
-        p_wrn("Godot is set to false, yet godot_copy() was requested via arg 'gc' \n")
-    if (('gx' in args.goRun) and godot == False):
-        p_wrn("Godot is set to false, yet  godot_run() was requested via arg 'gx'\n")
-
-    if (('gx' in args.goRun) and not 'gc' in args.goRun):
-        p_err("Will Try To Run Godot Scene Without Copying THe LIBRARY !!!! \n")
-
-    if (('x' in args.goRun) and TargetApp == False):
-        p_wrn("TargetApp is set to false, yet run_target() was requested via arg 'x'\n")
-    if (('t' in args.goRun) and EnableTest == False):
-        p_wrn("EnableTest is set to false, yet run_test) was requested via arg 't'\n")
-    pr_time(str(time.time()-fTime))
-
-# ------------------HELPER END------------
-
-
+# ---------------HELPER---------------------------
+# region parser
 # -------------------PARSER STARTS HERE----------------------
 parser = argparse.ArgumentParser()
 parser.add_argument("goRun", help="Get Some Help", nargs='+', default="b")
@@ -547,70 +459,98 @@ args = parser.parse_args()
 
 
 # -------------------PARSER ENDS HERE----------------------
-
-# ---------------- PRINT FUNCS ---------------
-
-
-def p_msg(what):
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    print(f"\033[30;102mMsg:\033[00m {what}\
-        func:{info.function}\
-        line:{info.lineno}\
+# -------------------PARSER_Helper starts----------------------
+def goRun_check():
+    fTime = time.time()
+    fun.p("executing")
+    validLis = ['c', 'r', 'b', 'x', 't', 'ct', 'cr', 'gc', 'gx', 'clean']
+    isValid = False
+    # isValid = goRun_has('clean') or goRun_has('c') or goRun_has(
+    #    'r') or goRun_has('b') or goRun_has('x') or goRun_has('gc') or goRun_has('gx')
+    for i in args.goRun:
+        if i in validLis:
+            isValid = True
+        else:
+            wrn.p(f"Unused argument: {i}")
+        pass
+    if not isValid:
+        msg.p(f"Valid Arguments to Run:\n\
+            c:     conan_run()\n\
+            r:     cmake_run()\n\
+            b:     cmake_build()\n\
+            x:     run_target()\n\
+            t:     run_tests()\n\
+            ct:    conan_test()\n\
+            cr:    conan_create()\n\
+            gc:    godot_copy()\n\
+            gx:    godot_run()\n\
+            clean: clean() and return\n\
+            --help: for help\n\
         ")
+        err.p("Please Enter a Valid Command", Fatal)
 
+    if (('c' in args.goRun) and conan == False):
+        wrn.p(f"Coan is set to false, yet coanan_run() was requested via arg 'c'\n")
 
-def p_wrn(what):
-    if (what == ""):
-        return
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    print(f"\033[30;103;3;4mWarn: {what}\
+    if (('gc' in args.goRun) and godot == False):
+        wrn.p("Godot is set to false, yet godot_copy() was requested via arg 'gc' \n")
+    if (('gx' in args.goRun) and godot == False):
+        wrn.p("Godot is set to false, yet  godot_run() was requested via arg 'gx'\n")
+
+    if (('gx' in args.goRun) and not 'gc' in args.goRun):
+        err.p("Will Try To Run Godot Scene Without Copying THe LIBRARY !!!! \n")
+
+    if (('x' in args.goRun) and TargetApp == False):
+        wrn.p("TargetApp is set to false, yet run_target() was requested via arg 'x'\n")
+    if (('t' in args.goRun) and EnableTest == False):
+        wrn.p("EnableTest is set to false, yet run_test) was requested via arg 't'\n")
+    pr_time(str(time.time()-fTime))
+
+# ------------------HELPER END------------
+# endregion
+
+# region ---------------- PRINT FUNCS ---------------
+class p_hpr:
+    style = f"\033[30;101;3;4mErr:"
+    label = f"default"
+    layout = "word"
+    end_word = f"\033[00m"
+    end_line = f"\033[00m"
+
+    def __init__(self, layout="word", style=f"\033[30;101m", label=f"default"):
+        self.style = style
+        self.label = label
+        self.layout = layout
+        if self.layout == "word":
+            self.end_line = ""
+        else:
+            self.end_word = ""
+
+    def p(self, what: str, isFatal: bool = False, frame1: str = 0):
+        if frame1 != 0:
+            frame = frame1
+        else:
+            callerframerecord = inspect.stack()[1]
+            frame = callerframerecord[0]
+        info = inspect.getframeinfo(frame)
+
+        print(f"{self.style}{self.label}{self.end_word} {what}\
         func:{info.function}\
         line:{info.lineno}\
-        \033[00m")
+        {self.end_line}")
+
+        if isFatal:
+            quit()
 
 
-def p_mwg(what):
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    print(f"\033[30;106;3;4m {what}\
-        func:{info.function}\
-        line:{info.lineno}\
-        \033[00m")
+err = p_hpr("line", f"\033[30;101m", "error: ")
+wrn = p_hpr("word", f"\033[30;103m", "warn : ")
+nfy = p_hpr("word", f"\033[35;40m",  "notice: ")
+fun = p_hpr("word", f"\033[93;34m",  "func-> ")
+msg = p_hpr("word", f"\033[30;102m", "msg: ")
 
 
-def p_nfy(what):
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    print(f"\033[30;44mNotice:\033[00m {what}\
-        func:{info.function}\
-        line:{info.lineno}")
 
-
-def p_fnc(what):
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    print(f"\033[30;45m{what}\033[00m\
-        func:{info.function}\
-        line:{info.lineno}")
-
-
-def p_err(what, isFatal=False):
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    print(f"\033[30;101;3;4mErr: {what}\
-        line:{info.lineno}\
-        func:{info.function}\
-        \033[00m")
-    if isFatal:
-        quit()
 
 
 def pr_time(what):
@@ -636,7 +576,94 @@ def p_time(what):
         \033[00m")
 
 # ---------------- PRINT FUNCS END---------------
+# endregion
+
+
+# region -------------------GODOT DATA STARTS----------------------
+
+if godot:
+    godot_scene = "Display.tscn"
+    godot_executable = f"/home/babayaga/godot/godotb"
+    godot_project_path = join(cfd, "godot/tanks")
+    godot_relative_src_path = f"godot/src_godot"
+    godot_lib = ["libgui.so"]
+    godot_dir = join(godot_project_path, "bin")
+    godot_scene_dir = join(godot_project_path, "scenes")
+# -------------------Godot DATA ENDS----------------------
+# endregion
+
+# region godot_func
+
+def godot_copy():
+    fTime = time.time()
+    fun.p("executing")
+    if godot == False:
+       # wrn.p("Godot is set to False")
+        return False
+
+    if not isdir(godot_project_path):
+        err.p("Godot ProjectDir NOT FOUND:\n{godot_project_path} ", Fatal)
+
+    if not isfile(join(godot_project_path, "project.godot")):
+        err.p(
+            "MostLikely Invalid godot project Directoey:\n{godot_project_path}")
+    if not isdir(godot_dir):
+        err.p("Godot Library folder  not found:\n{godot_dir}", Fatal)
+
+    if not isdir(godot_dir):
+        err.p(f"{godot_dir} Not FOund", Fatal)
+
+    for i in godot_lib:
+        target_lib = join(godot_dir, i)
+        src_lib = join(build_dir_path, godot_relative_src_path, i)
+
+        if not isfile(src_lib):
+            err.p(f"Godot Built Library Not FOund:\n{src_lib} ", Fatal)
+        if isfile(target_lib):
+            msg.p(f"removing {target_lib}:")
+            os.remove(target_lib)
+        else:
+            wrn.p(f"{target_lib} not fouind")
+        msg.p(f"copying {src_lib} --> {target_lib}")
+        ts = shutil.copy(src_lib, target_lib)
+    pr_time(str(time.time()-fTime))
+  
+def godot_run():
+    fTime = time.time()
+    fun.p("executing")
+    if godot == False:
+        # wrn.p("Godot is set to False")
+        return False
+
+    global godot_scene
+    if not args.scene == "":
+        godot_scene = args.scene
+    if not str(godot_scene).endswith(".tscn"):
+        godot_scene = godot_scene + ".tscn"
+
+    os.chdir(godot_project_path)
+    scene_path = join(godot_scene_dir, godot_scene)
+    if not isfile(godot_executable):
+        err.p("Godot Executable not found at {godot_executable}")
+        return False
+    if not isdir(godot_scene_dir):
+        err.p(f"Does Not Exist {godot_scene_dir}  ")
+        return False
+    if not isfile(scene_path):
+        err.p(f"Does Not Exist:--- {godot_scene} --AT \n {scene_path} ")
+        return False
+
+    runs = f"{godot_executable} -d {scene_path}"
+    result = subprocess.run(f"{runs}", shell=True)
+    nfy.p(f"{result}")
+
+    pr_time(str(time.time()-fTime))
+   
+
+# endregion
 
 
 MainFunc()
 # scons platform=android android_arch=arm64v8 generate_bindings=yes -j8
+
+# todo change functions to colorama and make a class out of em

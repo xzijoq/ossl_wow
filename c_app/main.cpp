@@ -1,7 +1,11 @@
-#include "server.h"
-#include "client.h"
+
 #include <iostream>
-//#include <asio.hpp>
-int main(){
-    std::cout<<"\nMAIN\n";
+
+
+int main(int argc, char **argv){
+
+    return 0;
 }
+
+
+
